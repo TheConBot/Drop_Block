@@ -1,11 +1,14 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class DropBlock : MonoBehaviour {
-    
+public class DropBlock : MonoBehaviour
+{
+
     private bool getInputOnce;
     private bool spawnBlockOnce;
     private bool inGoal;
+    private bool touchingBlock;
+    private GameObject objectTouched;
 
     void Start()
     {
@@ -23,28 +26,20 @@ public class DropBlock : MonoBehaviour {
         }
     }
 
-	void FixedUpdate () {
-        if (gameObject.GetComponent<Rigidbody2D>().velocity.magnitude <= 0.01 && transform.position.y < gameObject.GetComponent<MoveBlock>().startPos.y && spawnBlockOnce)
+    void FixedUpdate()
+    {
+        if (gameObject.GetComponent<Rigidbody2D>().velocity.magnitude <= 0.01 && transform.position.y < gameObject.GetComponent<MoveBlock>().startPos.y && spawnBlockOnce && touchingBlock)
         {
-            if (inGoal)
-            {
-                Debug.Log("You win!");
-                GameManager.Instance.blockColorChange(2, 1);
-                spawnBlockOnce = false;
-            }
-            else
-            {
-                GameManager.Instance.spawnDropBlock();
-                GameManager.Instance.blockColorChange(3, 2);
-                spawnBlockOnce = false;
-            }
+            GameManager.Instance.CheckWin(inGoal);
+            GameManager.Instance.blockColorChange(objectTouched, gameObject);
+            spawnBlockOnce = false;
         }
-	}
+    }
 
     void OnTriggerEnter2D(Collider2D other)
     {
         if (other.name == "Goal_Block") inGoal = true;
-        else if(other.name == "Death_Block")
+        else if (other.name == "Death_Block")
         {
             GameManager.Instance.LoadLevel(-1);
         }
@@ -53,5 +48,17 @@ public class DropBlock : MonoBehaviour {
     void OnTriggerExit2D(Collider2D other)
     {
         if (other.name == "Goal_Block") inGoal = false;
+    }
+
+    void OnCollisionEnter2D(Collision2D other)
+    {
+        touchingBlock = true;
+        objectTouched = other.gameObject;
+    }
+
+    void OnCollisionExit2D(Collision2D other)
+    {
+        touchingBlock = false;
+        objectTouched = null;
     }
 }
