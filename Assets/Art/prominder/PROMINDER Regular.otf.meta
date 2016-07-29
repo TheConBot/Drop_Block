@@ -1,0 +1,21 @@
+fileFormatVersion: 2
+guid: 6268855b74152b145bc16bc4d0c4b0f5
+timeCreated: 1469738512
+licenseType: Free
+TrueTypeFontImporter:
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontNames:
+  - PROMINDER
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: 126c052cbef1b124ebb38699321ba1db, type: 3}
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
