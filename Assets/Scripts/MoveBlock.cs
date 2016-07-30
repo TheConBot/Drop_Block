@@ -24,6 +24,17 @@ public class MoveBlock : MonoBehaviour {
         move = true;
     }
 	
+    public void SetPosition(Vector2 pos)
+    {
+        startPos = pos;
+        rightPos = new Vector2(startPos.x + distance, startPos.y);
+        leftPos = new Vector2(startPos.x - distance, startPos.y);
+        firstDirection = Random.Range(0, 2);
+        if (firstDirection == 0) goingRight = true;
+        else goingRight = false;
+        move = true;
+    }
+
 	// Update is called once per frame
 	void FixedUpdate () {
         if (goingRight && move)

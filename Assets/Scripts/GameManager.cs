@@ -17,6 +17,7 @@ public class GameManager : MonoBehaviour
     private Text goalCount;
     private int winCondition;
     private int goalsGot;
+    private int currentBlock;
 
     // Use this for initialization
     void Awake()
@@ -53,18 +54,36 @@ public class GameManager : MonoBehaviour
 
     public void SpawnDropBlock()
     {
-        GameObject Block = (GameObject)Instantiate(dropBlock, dropBlockSpawn, Quaternion.identity);
-        Block.name = "Drop_Blocks_" + (blocks.Count - 1);
-        blocks.Add(Block);
+        blocks[currentBlock].SetActive(true);
+        blocks[currentBlock].GetComponent<MoveBlock>().SetPosition(dropBlockSpawn);
+        blocks[currentBlock].transform.position = dropBlockSpawn;
+        //GameObject Block = (GameObject)Instantiate(dropBlock, dropBlockSpawn, Quaternion.identity);
+        currentBlock++;
     }
 
-    public void StartLevel(GameObject[] startBlocks, Vector2 spawn, Text b)
+    public void SpawnMainMenuBlock(GameObject blockNG)
+    {
+        float newScale = Random.Range(0.3f, 1.0f);
+        blockNG.transform.localScale = new Vector3(newScale, newScale);
+        blockNG.GetComponent<Rigidbody2D>().gravityScale = newScale;
+        blockNG.GetComponent<Rigidbody2D>().velocity = Vector2.zero;
+        blockNG.transform.position = new Vector3(Random.Range(-7.25f, 7.25f), Random.Range(5.25f, 7.25f));
+        blockNG.GetComponent<TimedDestroy>().waitTime = (blockNG.transform.position.y / 3f) + (1 - newScale);
+    }
+
+    public void StartLevel(GameObject[] startBlocks, List<GameObject> regBlocks, Vector2 spawn, Text b)
     {
         dropBlockSpawn = spawn;
         foreach (GameObject block in startBlocks)
         {
             blocks.Add(block);
             winCondition++;
+        }
+        currentBlock = winCondition;
+        foreach(GameObject block in regBlocks)
+        {
+            blocks.Add(block);
+            block.SetActive(false);
         }
         SpawnDropBlock();
         goalCount = b;
@@ -129,5 +148,6 @@ public class GameManager : MonoBehaviour
         blocks.Clear();
         completedCollums.Clear();
         dropBlockSpawn = Vector2.zero;
+        currentBlock = 0;
     }
 }
