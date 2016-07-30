@@ -8,6 +8,7 @@ public class GameManager : MonoBehaviour
 {
     public GameObject dropBlock;
     public List<GameObject> blocks;
+    public List<string> completedCollums;
     public Color gold;
     public static GameManager Instance { get; private set; }
 
@@ -35,7 +36,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void blockColorChange(GameObject toWhite, GameObject toGold)
+    public void BlockColorChange(GameObject toWhite, GameObject toGold)
     {
         SpriteRenderer[] square = toWhite.GetComponentsInChildren<SpriteRenderer>();
         foreach (SpriteRenderer sprite in square)
@@ -50,7 +51,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void spawnDropBlock()
+    public void SpawnDropBlock()
     {
         GameObject Block = (GameObject)Instantiate(dropBlock, dropBlockSpawn, Quaternion.identity);
         Block.name = "Drop_Blocks_" + (blocks.Count - 1);
@@ -65,7 +66,7 @@ public class GameManager : MonoBehaviour
             blocks.Add(block);
             winCondition++;
         }
-        spawnDropBlock();
+        SpawnDropBlock();
         goalCount = b;
         goalCount.text = "0/" + winCondition;
     }
@@ -80,21 +81,45 @@ public class GameManager : MonoBehaviour
         ClearVariables();
     }
 
-    public void CheckWin(bool inGoal)
+    public void CheckWin(bool inGoal, GameObject block)
     {
         if (inGoal)
         {
             goalsGot++;
             goalCount.text = goalsGot + "/" + winCondition;
+            completedCollums.Add(block.tag);
+            foreach(GameObject i in blocks)
+            {
+                if (i.tag == block.tag)
+                {
+                    i.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.FreezeAll;
+                    i.GetComponent <Collider2D>().enabled = false;
+                    SpriteRenderer[] sprites = i.GetComponentsInChildren<SpriteRenderer>();
+                    foreach(SpriteRenderer square in sprites)
+                    {
+                        square.color = Color.green;
+                    }
+                }
+            }
         }
+         
         if (goalsGot == winCondition)
         {
             Debug.Log("You Win!");
         }
         else
         {
-            spawnDropBlock();
+            SpawnDropBlock();
         }
+    }
+
+    public bool isRowComplete(GameObject block)
+    {
+        foreach(string tag in completedCollums)
+        {
+            if (block.tag == tag) return true;
+        }
+        return false;
     }
 
     private void ClearVariables()
@@ -102,6 +127,7 @@ public class GameManager : MonoBehaviour
         winCondition = 0;
         goalsGot = 0;
         blocks.Clear();
+        completedCollums.Clear();
         dropBlockSpawn = Vector2.zero;
     }
 }

@@ -30,9 +30,17 @@ public class DropBlock : MonoBehaviour
     {
         if (gameObject.GetComponent<Rigidbody2D>().velocity.magnitude <= 0.01 && transform.position.y < gameObject.GetComponent<MoveBlock>().startPos.y && spawnBlockOnce && touchingBlock)
         {
-            GameManager.Instance.CheckWin(inGoal);
-            GameManager.Instance.blockColorChange(objectTouched, gameObject);
-            spawnBlockOnce = false;
+            if (GameManager.Instance.isRowComplete(objectTouched))
+            {
+                GameManager.Instance.SpawnDropBlock();
+                spawnBlockOnce = false;
+            }
+            else {
+                gameObject.tag = objectTouched.tag;
+                GameManager.Instance.BlockColorChange(objectTouched, gameObject);
+                GameManager.Instance.CheckWin(inGoal, gameObject);
+                spawnBlockOnce = false;
+            }
         }
     }
 
