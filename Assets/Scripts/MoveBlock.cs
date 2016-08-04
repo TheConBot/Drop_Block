@@ -13,8 +13,10 @@ public class MoveBlock : MonoBehaviour {
     public Vector2 startPos;
     private Vector2 rightPos;
     private Vector2 leftPos;
+    private Rigidbody2D rigid;
 
     void Start () {
+        rigid = GetComponent<Rigidbody2D>();
         startPos = transform.position;
         rightPos = new Vector2(startPos.x + distance, startPos.y);
         leftPos = new Vector2(startPos.x - distance, startPos.y);
@@ -39,25 +41,44 @@ public class MoveBlock : MonoBehaviour {
 	void FixedUpdate () {
         if (goingRight && move)
         {
-            float timeSinceStarted = Time.time - timeStartedLerp;
-            float percentageComplete = timeSinceStarted / speed;
-            transform.position = Vector2.Lerp(transform.position, rightPos, percentageComplete);
+            rigid.velocity = new Vector2(speed, 0);
             if (transform.position.x >= rightPos.x - 0.1f)
             {
                 goingRight = false;
-                timeStartedLerp = Time.time;
             }
         }
         else if (!goingRight && move)
         {
-            float timeSinceStarted = Time.time - timeStartedLerp;
-            float percentageComplete = timeSinceStarted / speed;
-            transform.position = Vector2.Lerp(transform.position, leftPos, percentageComplete);
+            rigid.velocity = new Vector2(-speed, 0);
             if (transform.position.x <= leftPos.x + 0.1f)
             {
                 goingRight = true;
-                timeStartedLerp = Time.time;
             }
         }
+
+        //    Vector2 newPos = transform.position;
+        //    if (goingRight && move)
+        //    {
+        //        float timeSinceStarted = Time.time - timeStartedLerp;
+        //        float percentageComplete = timeSinceStarted / speed;
+        //        newPos = Vector2.Lerp(transform.position, rightPos, percentageComplete);
+        //        if (transform.position.x >= rightPos.x - 0.1f)
+        //        {
+        //            goingRight = false;
+        //            timeStartedLerp = Time.time;
+        //        }
+        //    }
+        //    else if (!goingRight && move)
+        //    {
+        //        float timeSinceStarted = Time.time - timeStartedLerp;
+        //        float percentageComplete = timeSinceStarted / speed;
+        //        newPos = Vector2.Lerp(transform.position, leftPos, percentageComplete);
+        //        if (transform.position.x <= leftPos.x + 0.1f)
+        //        {
+        //            goingRight = true;
+        //            timeStartedLerp = Time.time;
+        //        }
+        //    }
+        //    transform.position = newPos;
     }
 }

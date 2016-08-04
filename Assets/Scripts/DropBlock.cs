@@ -22,6 +22,7 @@ public class DropBlock : MonoBehaviour
         {
             gameObject.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.None;
             gameObject.GetComponent<MoveBlock>().move = false;
+            gameObject.GetComponent<Rigidbody2D>().velocity = Vector2.zero;
             getInputOnce = false;
         }
     }

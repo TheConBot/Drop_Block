@@ -18,6 +18,9 @@ public class GameManager : MonoBehaviour
     private int winCondition;
     private int goalsGot;
     private int currentBlock;
+    private bool wonLevel;
+
+    public int levelsUnlocked;
 
     // Use this for initialization
     void Awake()
@@ -34,6 +37,21 @@ public class GameManager : MonoBehaviour
 
             // Furthermore we make sure that we don't destroy between scenes (this is optional)
             DontDestroyOnLoad(gameObject);
+        }
+    }
+
+    void Update()
+    {
+        if(wonLevel && Input.anyKeyDown)
+        {
+            levelsUnlocked++;
+            //REMOVE THIS LATER!!!!!
+            if (levelsUnlocked > 5) levelsUnlocked = 5;
+            LoadLevel(0);
+        }
+        else if (currentLevel > 0 && Input.GetKeyDown(KeyCode.Escape))
+        {
+            LoadLevel(0);
         }
     }
 
@@ -124,7 +142,8 @@ public class GameManager : MonoBehaviour
          
         if (goalsGot == winCondition)
         {
-            Debug.Log("You Win!");
+            wonLevel = true;
+            goalCount.text = "You Win! Press any button to continue!";
         }
         else
         {
@@ -149,5 +168,6 @@ public class GameManager : MonoBehaviour
         completedCollums.Clear();
         dropBlockSpawn = Vector2.zero;
         currentBlock = 0;
+        wonLevel = false;
     }
 }

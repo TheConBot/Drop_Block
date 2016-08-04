@@ -8,8 +8,17 @@ public class StartLevel : MonoBehaviour {
     public GameObject[] startBlocks;
     public List<GameObject> regBlocks;
     public Text UI_count;
+    public GameObject gm;
 
-	void Start () {
+    void Awake()
+    {
+        if (Application.isEditor && GameObject.Find("GameManager") == null)
+        {
+            GameObject GameManager = Instantiate(gm);
+        }
+    }
+
+    void Start () {
         GameManager.Instance.StartLevel(startBlocks, regBlocks, dropBlockSpawn, UI_count);
 	}
 }
