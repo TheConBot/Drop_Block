@@ -10,6 +10,7 @@ public class MoveBlock : MonoBehaviour {
     private bool goingRight;
     public bool move;
     private float timeStartedLerp;
+    [HideInInspector]
     public Vector2 startPos;
     private Vector2 rightPos;
     private Vector2 leftPos;
@@ -17,13 +18,6 @@ public class MoveBlock : MonoBehaviour {
 
     void Start () {
         rigid = GetComponent<Rigidbody2D>();
-        startPos = transform.position;
-        rightPos = new Vector2(startPos.x + distance, startPos.y);
-        leftPos = new Vector2(startPos.x - distance, startPos.y);
-        firstDirection = Random.Range(0, 2);
-        if (firstDirection == 0) goingRight = true;
-        else goingRight = false;
-        move = true;
     }
 	
     public void SetPosition(Vector2 pos)

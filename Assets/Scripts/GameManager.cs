@@ -10,6 +10,7 @@ public class GameManager : MonoBehaviour
     public List<GameObject> blocks;
     public List<string> completedCollums;
     public Color gold;
+    public float speedMod;
     public static GameManager Instance { get; private set; }
 
     private Vector2 dropBlockSpawn;
@@ -73,9 +74,12 @@ public class GameManager : MonoBehaviour
     public void SpawnDropBlock()
     {
         blocks[currentBlock].SetActive(true);
+        float dist = blocks[currentBlock].GetComponent<MoveBlock>().distance;
+        dist = Random.Range((dropBlockSpawn.x - dist), (dropBlockSpawn.x + dist));
+        Debug.Log(dist);
+        Vector2 finalSpawn = new Vector2(dist, dropBlockSpawn.y);
         blocks[currentBlock].GetComponent<MoveBlock>().SetPosition(dropBlockSpawn);
-        blocks[currentBlock].transform.position = dropBlockSpawn;
-        //GameObject Block = (GameObject)Instantiate(dropBlock, dropBlockSpawn, Quaternion.identity);
+        blocks[currentBlock].transform.position = finalSpawn;
         currentBlock++;
     }
 
@@ -98,8 +102,13 @@ public class GameManager : MonoBehaviour
             winCondition++;
         }
         currentBlock = winCondition;
+        float currentSpeedMod = 0;
         foreach(GameObject block in regBlocks)
         {
+            float blockSpeed = block.GetComponent<MoveBlock>().speed;
+            blockSpeed = blockSpeed + currentSpeedMod;
+            currentSpeedMod = speedMod + currentSpeedMod;
+            block.GetComponent<MoveBlock>().speed = blockSpeed;
             blocks.Add(block);
             block.SetActive(false);
         }
