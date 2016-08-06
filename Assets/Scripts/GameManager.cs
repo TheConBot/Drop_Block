@@ -10,6 +10,7 @@ public class GameManager : MonoBehaviour
     public List<string> completedCollums;
     public Color gold;
     public Color green;
+    public Color white;
     public float speedMod;
 
     public static GameManager Instance { get; private set; }
@@ -64,7 +65,7 @@ public class GameManager : MonoBehaviour
         SpriteRenderer[] square = toWhite.GetComponentsInChildren<SpriteRenderer>();
         foreach (SpriteRenderer sprite in square)
         {
-            sprite.color = Color.white;
+            sprite.color = white;
         }
         //Set newly dropped block to gold
         square = toGold.GetComponentsInChildren<SpriteRenderer>();
