@@ -6,11 +6,11 @@ using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
-    public GameObject dropBlock;
     public List<GameObject> blocks;
     public List<string> completedCollums;
     public Color gold;
     public float speedMod;
+
     public static GameManager Instance { get; private set; }
 
     private Vector2 dropBlockSpawn;
@@ -35,7 +35,7 @@ public class GameManager : MonoBehaviour
 
             // Here we save our singleton instance
             Instance = this;
-
+            currentLevel = SceneManager.GetActiveScene().buildIndex;
             // Furthermore we make sure that we don't destroy between scenes (this is optional)
             DontDestroyOnLoad(gameObject);
         }
@@ -58,6 +58,8 @@ public class GameManager : MonoBehaviour
 
     public void BlockColorChange(GameObject toWhite, GameObject toGold)
     {
+        toWhite.GetComponent<DropBlock>().currentlyGold = false;
+        toGold.GetComponent<DropBlock>().currentlyGold = true;
         SpriteRenderer[] square = toWhite.GetComponentsInChildren<SpriteRenderer>();
         foreach (SpriteRenderer sprite in square)
         {
