@@ -91,7 +91,7 @@ public class GameManager : MonoBehaviour
         blockNG.transform.localScale = new Vector3(newScale, newScale);
         blockNG.GetComponent<Rigidbody2D>().gravityScale = newScale;
         blockNG.GetComponent<Rigidbody2D>().velocity = Vector2.zero;
-        blockNG.transform.position = new Vector3(Random.Range(-7.25f, 7.25f), Random.Range(5.25f, 7.25f));
+        blockNG.transform.position = new Vector3(Random.Range(-2.5f, 2.5f), Random.Range(5.25f, 9.25f));
         blockNG.GetComponent<TimedDestroy>().waitTime = (blockNG.transform.position.y / 3f) + (1 - newScale);
     }
 
