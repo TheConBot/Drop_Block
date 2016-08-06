@@ -9,6 +9,7 @@ public class GameManager : MonoBehaviour
     public List<GameObject> blocks;
     public List<string> completedCollums;
     public Color gold;
+    public Color green;
     public float speedMod;
 
     public static GameManager Instance { get; private set; }
@@ -78,7 +79,6 @@ public class GameManager : MonoBehaviour
         blocks[currentBlock].SetActive(true);
         float dist = blocks[currentBlock].GetComponent<MoveBlock>().distance;
         dist = Random.Range((dropBlockSpawn.x - dist), (dropBlockSpawn.x + dist));
-        Debug.Log(dist);
         Vector2 finalSpawn = new Vector2(dist, dropBlockSpawn.y);
         blocks[currentBlock].GetComponent<MoveBlock>().SetPosition(dropBlockSpawn);
         blocks[currentBlock].transform.position = finalSpawn;
@@ -145,7 +145,7 @@ public class GameManager : MonoBehaviour
                     SpriteRenderer[] sprites = i.GetComponentsInChildren<SpriteRenderer>();
                     foreach(SpriteRenderer square in sprites)
                     {
-                        square.color = Color.green;
+                        square.color = green;
                     }
                 }
             }
