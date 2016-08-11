@@ -15,6 +15,8 @@ public class StartLevel : MonoBehaviour {
         if (Application.isEditor && GameObject.Find("GameManager") == null)
         {
             GameObject GameManager = Instantiate(gm);
+            //Only doing this to get rid of the stupid "value is assigned but not used" warning
+            GameManager.name = "GameManager";
         }
     }
 

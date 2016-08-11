@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.EventSystems;
 
 public class DropBlock : MonoBehaviour
 {
@@ -25,12 +26,24 @@ public class DropBlock : MonoBehaviour
     {
         if (blockType == TypeOfBlock.Drop_Block)
         {
-            if (Input.anyKeyDown && getInputOnce)
+            if (Application.isMobilePlatform)
             {
-                gameObject.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.None;
-                gameObject.GetComponent<MoveBlock>().move = false;
-                gameObject.GetComponent<Rigidbody2D>().velocity = Vector2.zero;
-                getInputOnce = false;
+                if (Input.GetTouch(0).phase == TouchPhase.Began && getInputOnce && !EventSystem.current.IsPointerOverGameObject((Input.GetTouch(0).fingerId)))
+                {
+                    gameObject.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.None;
+                    gameObject.GetComponent<MoveBlock>().move = false;
+                    gameObject.GetComponent<Rigidbody2D>().velocity = Vector2.zero;
+                    getInputOnce = false;
+                }
+            }
+            else {
+                if (Input.anyKeyDown && getInputOnce && !EventSystem.current.IsPointerOverGameObject())
+                {
+                    gameObject.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.None;
+                    gameObject.GetComponent<MoveBlock>().move = false;
+                    gameObject.GetComponent<Rigidbody2D>().velocity = Vector2.zero;
+                    getInputOnce = false;
+                }
             }
         }
     }

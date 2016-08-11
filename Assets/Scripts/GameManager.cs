@@ -6,12 +6,20 @@ using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
+    [Header("Lists of Data")]
     public List<GameObject> blocks;
     public List<string> completedCollums;
+    [Header("Block Colors")]
     public Color gold;
     public Color green;
     public Color white;
+    [Header("Variable Fields")]
     public float speedMod;
+    public int levelsUnlocked;
+    [Header("Sounds")]
+    public AudioSource Confirm;
+    public AudioSource Back;
+    public AudioSource Ding;
 
     public static GameManager Instance { get; private set; }
 
@@ -22,8 +30,6 @@ public class GameManager : MonoBehaviour
     private int goalsGot;
     private int currentBlock;
     private bool wonLevel;
-
-    public int levelsUnlocked;
 
     // Use this for initialization
     void Awake()
@@ -37,7 +43,7 @@ public class GameManager : MonoBehaviour
 
             // Here we save our singleton instance
             Instance = this;
-            currentLevel = SceneManager.GetActiveScene().buildIndex;
+            if (Application.isEditor) { currentLevel = SceneManager.GetActiveScene().buildIndex; }
             // Furthermore we make sure that we don't destroy between scenes (this is optional)
             DontDestroyOnLoad(gameObject);
         }
@@ -52,14 +58,11 @@ public class GameManager : MonoBehaviour
             if (levelsUnlocked > 5) levelsUnlocked = 5;
             LoadLevel(0);
         }
-        else if (currentLevel > 0 && Input.GetKeyDown(KeyCode.Escape))
-        {
-            LoadLevel(0);
-        }
     }
 
     public void BlockColorChange(GameObject toWhite, GameObject toGold)
     {
+        Ding.Play();
         toWhite.GetComponent<DropBlock>().currentlyGold = false;
         toGold.GetComponent<DropBlock>().currentlyGold = true;
         SpriteRenderer[] square = toWhite.GetComponentsInChildren<SpriteRenderer>();
@@ -122,12 +125,18 @@ public class GameManager : MonoBehaviour
 
     public void LoadLevel(int i)
     {
-        if (i == -1) SceneManager.LoadScene(currentLevel);
+        if (i == -1)
+        {
+            Back.Play();
+            SceneManager.LoadScene(currentLevel);
+        }
         else {
+            Confirm.Play();
             SceneManager.LoadScene(i);
             currentLevel = i;
         }
         ClearVariables();
+        Time.timeScale = 1;
     }
 
     public void CheckWin(bool inGoal, GameObject block)
@@ -155,7 +164,13 @@ public class GameManager : MonoBehaviour
         if (goalsGot == winCondition)
         {
             wonLevel = true;
-            goalCount.text = "You Win! Press any button to continue!";
+            if (Application.isMobilePlatform)
+            {
+                goalCount.text = "You Win! Tap anywhere to continue!";
+            }
+            else {
+                goalCount.text = "You Win! Press any button to continue!";
+            }
         }
         else
         {
