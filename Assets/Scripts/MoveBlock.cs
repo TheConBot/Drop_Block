@@ -8,6 +8,7 @@ public class MoveBlock : MonoBehaviour {
 
     private int firstDirection;
     private bool goingRight;
+    [HideInInspector]
     public bool move;
     private float timeStartedLerp;
     [HideInInspector]
@@ -49,30 +50,5 @@ public class MoveBlock : MonoBehaviour {
                 goingRight = true;
             }
         }
-
-        //    Vector2 newPos = transform.position;
-        //    if (goingRight && move)
-        //    {
-        //        float timeSinceStarted = Time.time - timeStartedLerp;
-        //        float percentageComplete = timeSinceStarted / speed;
-        //        newPos = Vector2.Lerp(transform.position, rightPos, percentageComplete);
-        //        if (transform.position.x >= rightPos.x - 0.1f)
-        //        {
-        //            goingRight = false;
-        //            timeStartedLerp = Time.time;
-        //        }
-        //    }
-        //    else if (!goingRight && move)
-        //    {
-        //        float timeSinceStarted = Time.time - timeStartedLerp;
-        //        float percentageComplete = timeSinceStarted / speed;
-        //        newPos = Vector2.Lerp(transform.position, leftPos, percentageComplete);
-        //        if (transform.position.x <= leftPos.x + 0.1f)
-        //        {
-        //            goingRight = true;
-        //            timeStartedLerp = Time.time;
-        //        }
-        //    }
-        //    transform.position = newPos;
     }
 }

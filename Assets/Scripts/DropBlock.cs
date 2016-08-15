@@ -1,20 +1,20 @@
 ﻿using UnityEngine;
-using System.Collections;
 using UnityEngine.EventSystems;
 
 public class DropBlock : MonoBehaviour
 {
-    public enum TypeOfBlock {Drop_Block, Start_Block};
-    public TypeOfBlock blockType;
-    private bool getInputOnce;
-    private bool spawnBlockOnce;
-    private bool inGoal;
-    private bool touchingBlock;
-    private GameObject objectTouched;
-    public bool currentlyGold = false;
+    public enum TypeOfBlock { Drop_Block, Start_Block };
+    public TypeOfBlock      blockType;
+    private bool            getInputOnce;
+    private bool            spawnBlockOnce;
+    private bool            inGoal;
+    private bool            touchingBlock;
+    private GameObject      objectTouched;
+    public bool             currentlyGold;
 
     void Start()
     {
+        //Only once bools
         if (blockType == TypeOfBlock.Drop_Block)
         {
             getInputOnce = true;
@@ -24,6 +24,7 @@ public class DropBlock : MonoBehaviour
 
     void Update()
     {
+        //Getting the input and dropping the block
         if (blockType == TypeOfBlock.Drop_Block)
         {
             if (Application.isMobilePlatform)
@@ -50,21 +51,15 @@ public class DropBlock : MonoBehaviour
 
     void FixedUpdate()
     {
+        //If the block is not moving, is below its spawn point, and is touching a gold block it adds that block to the appropriate collumn, changes the color, and checks the game state.
         if (blockType == TypeOfBlock.Drop_Block)
         {
             if (gameObject.GetComponent<Rigidbody2D>().velocity.magnitude <= 0.01 && transform.position.y < gameObject.GetComponent<MoveBlock>().startPos.y && spawnBlockOnce && touchingBlock)
             {
-                if (GameManager.Instance.isRowComplete(objectTouched))
-                {
-                    GameManager.Instance.SpawnDropBlock();
-                    spawnBlockOnce = false;
-                }
-                else {
-                    gameObject.tag = objectTouched.tag;
-                    GameManager.Instance.BlockColorChange(objectTouched, gameObject);
-                    GameManager.Instance.CheckWin(inGoal, gameObject);
-                    spawnBlockOnce = false;
-                }
+                gameObject.tag = objectTouched.tag;
+                GameManager.Instance.BlockColorChange(objectTouched, gameObject);
+                GameManager.Instance.CheckWin(inGoal, gameObject);
+                spawnBlockOnce = false;
             }
         }
     }
@@ -94,18 +89,6 @@ public class DropBlock : MonoBehaviour
             {
                 touchingBlock = true;
                 objectTouched = other.gameObject;
-            }
-        }
-    }
-
-    void OnCollisionExit2D(Collision2D other)
-    {
-        if (blockType == TypeOfBlock.Drop_Block)
-        {
-            if (other.gameObject.tag.StartsWith("S") && blockType == TypeOfBlock.Drop_Block && other.gameObject.GetComponent<DropBlock>().currentlyGold)
-            {
-                touchingBlock = false;
-                objectTouched = null;
             }
         }
     }

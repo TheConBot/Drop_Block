@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -30,36 +29,36 @@ public class GameManager : MonoBehaviour
     private int goalsGot;
     private int currentBlock;
     private bool wonLevel;
+    private int currentGameMode;
 
-    // Use this for initialization
     void Awake()
     {
         if (Instance != null && Instance != this)
         {
-            // If that is the case, we destroy other instances
+            // Destroy if another Gamemanager already exists
             Destroy(gameObject);
         }
         else {
 
             // Here we save our singleton instance
             Instance = this;
+            //In editor we make sure the game knows what scene it is in for level loading
             if (Application.isEditor) { currentLevel = SceneManager.GetActiveScene().buildIndex; }
-            // Furthermore we make sure that we don't destroy between scenes (this is optional)
+            // Furthermore we make sure that we don't destroy between scenes
             DontDestroyOnLoad(gameObject);
         }
     }
 
     void Update()
     {
-        if(wonLevel && Input.anyKeyDown)
+        //After you win a level it takes you back to the main menu after touching/clicking
+        if (wonLevel && Input.anyKeyDown)
         {
-            levelsUnlocked++;
-            //REMOVE THIS LATER!!!!!
-            if (levelsUnlocked > 5) levelsUnlocked = 5;
             LoadLevel(0);
         }
     }
 
+    //Provides the climbing gold block effect and plays a sound
     public void BlockColorChange(GameObject toWhite, GameObject toGold)
     {
         Ding.Play();
@@ -78,51 +77,68 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void SpawnDropBlock()
+    //Checks the state of the level after each block is dropped.
+    public void CheckWin(bool inGoal, GameObject block)
     {
-        blocks[currentBlock].SetActive(true);
-        float dist = blocks[currentBlock].GetComponent<MoveBlock>().distance;
-        dist = Random.Range((dropBlockSpawn.x - dist), (dropBlockSpawn.x + dist));
-        Vector2 finalSpawn = new Vector2(dist, dropBlockSpawn.y);
-        blocks[currentBlock].GetComponent<MoveBlock>().SetPosition(dropBlockSpawn);
-        blocks[currentBlock].transform.position = finalSpawn;
-        currentBlock++;
-    }
-
-    public void SpawnMainMenuBlock(GameObject blockNG)
-    {
-        float newScale = Random.Range(0.3f, 1.0f);
-        blockNG.transform.localScale = new Vector3(newScale, newScale);
-        blockNG.GetComponent<Rigidbody2D>().gravityScale = newScale;
-        blockNG.GetComponent<Rigidbody2D>().velocity = Vector2.zero;
-        blockNG.transform.position = new Vector3(Random.Range(-2.5f, 2.5f), Random.Range(5.25f, 9.25f));
-        blockNG.GetComponent<TimedDestroy>().waitTime = (blockNG.transform.position.y / 3f) + (1 - newScale);
-    }
-
-    public void StartLevel(GameObject[] startBlocks, List<GameObject> regBlocks, Vector2 spawn, Text b)
-    {
-        dropBlockSpawn = spawn;
-        foreach (GameObject block in startBlocks)
+        if (currentGameMode == 2)
         {
-            blocks.Add(block);
-            winCondition++;
+            SpawnDropBlock(blocks[0]);
+            Camera.main.transform.position = new Vector3(Camera.main.transform.position.x, Camera.main.transform.position.y + 0.46f, Camera.main.transform.position.z);
         }
-        currentBlock = winCondition;
-        float currentSpeedMod = 0;
-        foreach(GameObject block in regBlocks)
-        {
-            float blockSpeed = block.GetComponent<MoveBlock>().speed;
-            blockSpeed = blockSpeed + currentSpeedMod;
-            currentSpeedMod = speedMod + currentSpeedMod;
-            block.GetComponent<MoveBlock>().speed = blockSpeed;
-            blocks.Add(block);
-            block.SetActive(false);
+        else {
+            //Checks to see if you made it into the goal with a stack. If so, turns all the blocks green and makes them immovable
+            if (inGoal)
+            {
+                goalsGot++;
+                goalCount.text = goalsGot + "/" + winCondition;
+                completedCollums.Add(block.tag);
+                foreach (GameObject i in blocks)
+                {
+                    if (i.tag == block.tag)
+                    {
+                        i.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.FreezeAll;
+                        i.GetComponent<Collider2D>().enabled = false;
+                        SpriteRenderer[] sprites = i.GetComponentsInChildren<SpriteRenderer>();
+                        foreach (SpriteRenderer square in sprites)
+                        {
+                            square.color = green;
+                        }
+                    }
+                }
+            }
+            //if you've won changes the game state to the end game
+            if (goalsGot == winCondition)
+            {
+                wonLevel = true;
+                if (Application.isMobilePlatform)
+                {
+                    goalCount.text = "You Win! Tap anywhere to continue!";
+                }
+                else {
+                    goalCount.text = "You Win! Press any button to continue!";
+                }
+            }
+            //If you didnt win keeps on playing
+            else
+            {
+                SpawnDropBlock();
+            }
         }
-        SpawnDropBlock();
-        goalCount = b;
-        goalCount.text = "0/" + winCondition;
     }
 
+    //Clears variables that the GameManager uses to track game state
+    private void ClearVariables()
+    {
+        winCondition = 0;
+        goalsGot = 0;
+        blocks.Clear();
+        completedCollums.Clear();
+        dropBlockSpawn = Vector2.zero;
+        currentBlock = 0;
+        wonLevel = false;
+    }
+
+    //Level switching system, if -1 is passed it reloads the level.
     public void LoadLevel(int i)
     {
         if (i == -1)
@@ -139,62 +155,73 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 1;
     }
 
-    public void CheckWin(bool inGoal, GameObject block)
+    //Method for starting hard levels.
+    public void StartLevelHard(GameObject[] startBlocks, List<GameObject> regBlocks, Vector2 spawn, Text b)
     {
-        if (inGoal)
+        currentGameMode = 1;
+        dropBlockSpawn = spawn;
+        foreach (GameObject block in startBlocks)
         {
-            goalsGot++;
-            goalCount.text = goalsGot + "/" + winCondition;
-            completedCollums.Add(block.tag);
-            foreach(GameObject i in blocks)
-            {
-                if (i.tag == block.tag)
-                {
-                    i.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.FreezeAll;
-                    i.GetComponent <Collider2D>().enabled = false;
-                    SpriteRenderer[] sprites = i.GetComponentsInChildren<SpriteRenderer>();
-                    foreach(SpriteRenderer square in sprites)
-                    {
-                        square.color = green;
-                    }
-                }
-            }
+            blocks.Add(block);
+            winCondition++;
         }
-         
-        if (goalsGot == winCondition)
+        currentBlock = winCondition;
+        float currentSpeedMod = 0;
+        foreach (GameObject block in regBlocks)
         {
-            wonLevel = true;
-            if (Application.isMobilePlatform)
-            {
-                goalCount.text = "You Win! Tap anywhere to continue!";
-            }
-            else {
-                goalCount.text = "You Win! Press any button to continue!";
-            }
+            float blockSpeed = block.GetComponent<MoveBlock>().speed;
+            blockSpeed = blockSpeed + currentSpeedMod;
+            currentSpeedMod = speedMod + currentSpeedMod;
+            block.GetComponent<MoveBlock>().speed = blockSpeed;
+            blocks.Add(block);
+            block.SetActive(false);
         }
-        else
-        {
-            SpawnDropBlock();
-        }
+        SpawnDropBlock();
+        goalCount = b;
+        goalCount.text = "0/" + winCondition;
     }
 
-    public bool isRowComplete(GameObject block)
+    public void StartLevelEndless(GameObject dropBlock, Vector2 spawn, Text b)
     {
-        foreach(string tag in completedCollums)
-        {
-            if (block.tag == tag) return true;
-        }
-        return false;
+        currentGameMode = 2;
+        dropBlockSpawn = spawn;
+        blocks.Add(dropBlock);
+        goalCount = b;
+        SpawnDropBlock(blocks[0]);
     }
 
-    private void ClearVariables()
+    //The system for "spawing" the blocks.
+    private void SpawnDropBlock()
     {
-        winCondition = 0;
-        goalsGot = 0;
-        blocks.Clear();
-        completedCollums.Clear();
-        dropBlockSpawn = Vector2.zero;
-        currentBlock = 0;
-        wonLevel = false;
+        blocks[currentBlock].SetActive(true);
+        float dist = blocks[currentBlock].GetComponent<MoveBlock>().distance;
+        dist = Random.Range((dropBlockSpawn.x - dist), (dropBlockSpawn.x + dist));
+        Vector2 finalSpawn = new Vector2(dist, dropBlockSpawn.y);
+        blocks[currentBlock].GetComponent<MoveBlock>().SetPosition(dropBlockSpawn);
+        blocks[currentBlock].transform.position = finalSpawn;
+        currentBlock++;
+    }
+
+    private void SpawnDropBlock(GameObject block)
+    {
+        float dist = block.GetComponent<MoveBlock>().distance;
+        dist = Random.Range((dropBlockSpawn.x - dist), (dropBlockSpawn.x + dist));
+        Vector2 finalSpawn = new Vector2(dist, dropBlockSpawn.y + 0.46f);
+        dropBlockSpawn = new Vector2(dropBlockSpawn.x, finalSpawn.y);
+        GameObject newBlock = (GameObject)Instantiate(block, finalSpawn, Quaternion.identity);
+        newBlock.GetComponent<MoveBlock>().SetPosition(dropBlockSpawn);
+        currentBlock++;
+        goalCount.text = (currentBlock - 1).ToString();
+    }
+
+    //The system for "spawning" the main menu decrotive blocks.
+    public void SpawnMainMenuBlock(GameObject blockNG)
+    {
+        float newScale = Random.Range(0.3f, 1.0f);
+        blockNG.transform.localScale = new Vector3(newScale, newScale);
+        blockNG.GetComponent<Rigidbody2D>().gravityScale = newScale;
+        blockNG.GetComponent<Rigidbody2D>().velocity = Vector2.zero;
+        blockNG.transform.position = new Vector3(Random.Range(-2.5f, 2.5f), Random.Range(5.25f, 9.25f));
+        blockNG.GetComponent<TimedDestroy>().waitTime = (blockNG.transform.position.y / 3f) + (1 - newScale);
     }
 }
