@@ -30,6 +30,8 @@ public class GameManager : MonoBehaviour
     private int currentBlock;
     private bool wonLevel;
     private int currentGameMode;
+    private GameObject gameOverScreen;
+    private int endlessHighScore;
 
     void Awake()
     {
@@ -46,6 +48,7 @@ public class GameManager : MonoBehaviour
             if (Application.isEditor) { currentLevel = SceneManager.GetActiveScene().buildIndex; }
             // Furthermore we make sure that we don't destroy between scenes
             DontDestroyOnLoad(gameObject);
+            endlessHighScore = PlayerPrefs.GetInt("endlessHighScore");
         }
     }
 
@@ -136,6 +139,39 @@ public class GameManager : MonoBehaviour
         dropBlockSpawn = Vector2.zero;
         currentBlock = 0;
         wonLevel = false;
+        gameOverScreen = null;
+    }
+
+    public void CloseMMButtons(GameObject MasterButtons, GameObject buttons)
+    {
+        Back.Play();
+        MasterButtons.SetActive(true);
+        buttons.SetActive(false);
+    }
+
+    public void GameOver()
+    {
+        Back.Play();
+        gameOverScreen.SetActive(true);
+        goalCount.text = "Try Again!";
+        if(currentGameMode == 2)
+        {
+            if(currentBlock > endlessHighScore)
+            {
+                PlayerPrefs.SetInt("endlessHighScore", currentBlock);
+                endlessHighScore = currentBlock;
+                gameOverScreen.GetComponentInChildren<Text>().text = string.Format("Score: {0}    Best: <color=#56D963FF>{0}</color>", currentBlock);
+            }
+            else
+            {
+                gameOverScreen.GetComponentInChildren<Text>().text = string.Format("Score: {0}    Best: {1}", currentBlock, endlessHighScore);
+            }
+        }
+        else
+        {
+            gameOverScreen.GetComponentInChildren<Text>().text = string.Format("Goals: {0}", goalsGot);
+        }
+
     }
 
     //Level switching system, if -1 is passed it reloads the level.
@@ -155,9 +191,17 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 1;
     }
 
-    //Method for starting hard levels.
-    public void StartLevelHard(GameObject[] startBlocks, List<GameObject> regBlocks, Vector2 spawn, Text b)
+    public void OpenMMButtons(GameObject MasterButtons, GameObject buttons)
     {
+        Confirm.Play();
+        MasterButtons.SetActive(false);
+        buttons.SetActive(true);
+    }
+
+    //Method for starting hard levels.
+    public void StartLevelHard(GameObject[] startBlocks, List<GameObject> regBlocks, Vector2 spawn, Text b, GameObject gameOverPanel)
+    {
+        gameOverScreen = gameOverPanel;
         currentGameMode = 1;
         dropBlockSpawn = spawn;
         foreach (GameObject block in startBlocks)
@@ -181,8 +225,9 @@ public class GameManager : MonoBehaviour
         goalCount.text = "0/" + winCondition;
     }
 
-    public void StartLevelEndless(GameObject dropBlock, Vector2 spawn, Text b)
+    public void StartLevelEndless(GameObject dropBlock, Vector2 spawn, Text b, GameObject gameOverPanel)
     {
+        gameOverScreen = gameOverPanel;
         currentGameMode = 2;
         dropBlockSpawn = spawn;
         blocks.Add(dropBlock);

@@ -11,6 +11,7 @@ public class StartLevel : MonoBehaviour {
     public List<GameObject> regBlocks;
     public Text UI_count;
     public GameObject gm;
+    public GameObject gameOverPanel;
 
     void Awake()
     {
@@ -25,7 +26,7 @@ public class StartLevel : MonoBehaviour {
 
     void Start () {
         if (gameMode == GameMode.Regular) { }
-        if (gameMode == GameMode.Hard) { GameManager.Instance.StartLevelHard(startBlocks, regBlocks, dropBlockSpawn, UI_count); }
-        if (gameMode == GameMode.Endless) { GameManager.Instance.StartLevelEndless(regBlocks[0], dropBlockSpawn, UI_count); }
+        if (gameMode == GameMode.Hard) { GameManager.Instance.StartLevelHard(startBlocks, regBlocks, dropBlockSpawn, UI_count, gameOverPanel); }
+        if (gameMode == GameMode.Endless) { GameManager.Instance.StartLevelEndless(regBlocks[0], dropBlockSpawn, UI_count, gameOverPanel); }
 	}
 }

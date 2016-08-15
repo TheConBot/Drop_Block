@@ -69,7 +69,7 @@ public class DropBlock : MonoBehaviour
         if (blockType == TypeOfBlock.Drop_Block)
         {
             if (other.name == "Goal_Block") inGoal = true;
-            else if (other.name == "Death_Block") GameManager.Instance.LoadLevel(-1);
+            else if (other.name == "Death_Block") GameManager.Instance.GameOver();
         }
     }
 
@@ -85,7 +85,7 @@ public class DropBlock : MonoBehaviour
     {
         if (blockType == TypeOfBlock.Drop_Block)
         {
-            if (other.gameObject.tag.StartsWith("S") && blockType == TypeOfBlock.Drop_Block && other.gameObject.GetComponent<DropBlock>().currentlyGold)
+            if (other.gameObject.tag.StartsWith("S") && other.gameObject.GetComponent<DropBlock>().currentlyGold)
             {
                 touchingBlock = true;
                 objectTouched = other.gameObject;
