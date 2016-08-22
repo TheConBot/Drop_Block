@@ -52,6 +52,7 @@ public class GameManager : MonoBehaviour
             // Furthermore we make sure that we don't destroy between scenes
             DontDestroyOnLoad(gameObject);
             endlessHighScore = PlayerPrefs.GetInt("endlessHighScore");
+            Debug.Log(endlessHighScore);
         }
     }
 
@@ -105,6 +106,7 @@ public class GameManager : MonoBehaviour
             //if you've won changes the game state to the end game
             if (goalsGot == winCondition)
             {
+                wonLevel = true;
                 Win();
             }
             //If you didnt win keeps on playing
@@ -133,7 +135,6 @@ public class GameManager : MonoBehaviour
         currentBlock = 0;
         wonLevel = false;
         endGameScreen = null;
-        endlessHighScore = 0;
         blocksRemaining = 0;
         blocksRemainingText = null;
         goalCount = null;
@@ -183,15 +184,16 @@ public class GameManager : MonoBehaviour
             goalCount.text = "Try Again!";
             if (currentGameMode == 2)
             {
-                if (currentBlock > endlessHighScore)
+                if (currentBlock - 1 > endlessHighScore)
                 {
-                    PlayerPrefs.SetInt("endlessHighScore", currentBlock);
+                    Debug.Log("Bloop currentblock: " + (currentBlock - 1) + " and high score: " + endlessHighScore);
+                    PlayerPrefs.SetInt("endlessHighScore", currentBlock - 1);
                     endlessHighScore = currentBlock;
-                    endGameScreen.GetComponentInChildren<Text>().text = string.Format("Score: {0}    Best: <color=#56D963FF>{0}</color>", currentBlock);
+                    endGameScreen.GetComponentInChildren<Text>().text = string.Format("Score: {0}    Best: <color=#56D963FF>{0}</color>", currentBlock - 1);
                 }
                 else
                 {
-                    endGameScreen.GetComponentInChildren<Text>().text = string.Format("Score: {0}    Best: {1}", currentBlock, endlessHighScore);
+                    endGameScreen.GetComponentInChildren<Text>().text = string.Format("Score: {0}    Best: {1}", currentBlock - 1, endlessHighScore);
                 }
             }
             else
