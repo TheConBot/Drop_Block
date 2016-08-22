@@ -19,6 +19,10 @@ public class MoveBlock : MonoBehaviour {
 
     void Start () {
         rigid = GetComponent<Rigidbody2D>();
+        if(gameObject.GetComponent<DropBlock>() == null || gameObject.GetComponent<DropBlock>().blockType != 0 )
+        {
+            SetPosition(transform.position);
+        }
     }
 	
     public void SetPosition(Vector2 pos)
@@ -49,6 +53,19 @@ public class MoveBlock : MonoBehaviour {
             {
                 goingRight = true;
             }
+        }
+    }
+
+    void OnCollisionEnter2D(Collision2D other)
+    {
+        if (gameObject.GetComponent<DropBlock>() == null)
+        {
+            return;
+        }
+        else if(gameObject.GetComponent<DropBlock>().blockType != 0)
+        {
+            move = false;
+            rigid.velocity = Vector2.zero;
         }
     }
 }

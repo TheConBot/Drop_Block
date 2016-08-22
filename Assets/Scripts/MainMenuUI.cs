@@ -2,20 +2,52 @@
 using System.Collections;
 
 public class MainMenuUI : MonoBehaviour {
+    [Header("UI Panels")]
+    public GameObject FiniteButtons;
+    public GameObject LifeButtons;
+    public GameObject Life;
+    public GameObject Death;
 
-    public GameObject MasterButtons;
-
-	public void OpenMMButtons(GameObject buttons)
+    void Awake()
     {
-        GameManager.Instance.OpenMMButtons(MasterButtons, buttons);
+        FiniteButtons.SetActive(true);
+        LifeButtons.SetActive(false);
+        Life.SetActive(false);
+        Death.SetActive(false);
     }
 
-    public void CloseMMButtons(GameObject buttons)
+	public void OpenLifeButtons()
     {
-        GameManager.Instance.CloseMMButtons(MasterButtons, buttons);
+        GameManager.Instance.MainMenuUI(LifeButtons, FiniteButtons, true);
     }
 
-    public void LoadLevel(int i)
+    public void CloseLifeButtons()
+    {
+        GameManager.Instance.MainMenuUI(FiniteButtons, LifeButtons, false);
+    }
+
+    public void OpenLife()
+    {
+        GameManager.Instance.MainMenuUI(Life, LifeButtons, true);
+    }
+
+    public void CloseLife()
+    {
+        GameManager.Instance.MainMenuUI(LifeButtons, Life, false);
+    }
+
+    public void OpenDeath()
+    {
+        GameManager.Instance.MainMenuUI(Death, LifeButtons, true);
+    }
+
+    public void CloseDeath()
+    {
+        GameManager.Instance.MainMenuUI(LifeButtons, Death, false);
+    }
+
+
+    public void LoadLevel(string i)
     {
         GameManager.Instance.LoadLevel(i);
     }

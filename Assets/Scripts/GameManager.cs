@@ -5,15 +5,13 @@ using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
-    [Header("Lists of Data")]
-    public List<GameObject> blocks;
-    public List<string> completedCollums;
+    public bool isActiveMovingBlock;
     [Header("Block Colors")]
     public Color gold;
     public Color green;
     public Color white;
     [Header("Variable Fields")]
-    public float speedMod;
+    public float camSpeed = 3;
     public int levelsUnlocked;
     [Header("Sounds")]
     public AudioSource Confirm;
@@ -22,16 +20,23 @@ public class GameManager : MonoBehaviour
 
     public static GameManager Instance { get; private set; }
 
+    //Lists
+    [HideInInspector]
+    public List<GameObject> blocks;
+    [HideInInspector]
+    public List<string> completedCollums;
+    //Vars
     private Vector2 dropBlockSpawn;
-    private int currentLevel = 0;
     private Text goalCount;
     private int winCondition;
     private int goalsGot;
     private int currentBlock;
     private bool wonLevel;
     private int currentGameMode;
-    private GameObject gameOverScreen;
+    private GameObject endGameScreen;
     private int endlessHighScore;
+    private int blocksRemaining;
+    private Text blocksRemainingText;
 
     void Awake()
     {
@@ -44,27 +49,15 @@ public class GameManager : MonoBehaviour
 
             // Here we save our singleton instance
             Instance = this;
-            //In editor we make sure the game knows what scene it is in for level loading
-            if (Application.isEditor) { currentLevel = SceneManager.GetActiveScene().buildIndex; }
             // Furthermore we make sure that we don't destroy between scenes
             DontDestroyOnLoad(gameObject);
             endlessHighScore = PlayerPrefs.GetInt("endlessHighScore");
         }
     }
 
-    void Update()
-    {
-        //After you win a level it takes you back to the main menu after touching/clicking
-        if (wonLevel && Input.anyKeyDown)
-        {
-            LoadLevel(0);
-        }
-    }
-
     //Provides the climbing gold block effect and plays a sound
     public void BlockColorChange(GameObject toWhite, GameObject toGold)
     {
-        Ding.Play();
         toWhite.GetComponent<DropBlock>().currentlyGold = false;
         toGold.GetComponent<DropBlock>().currentlyGold = true;
         SpriteRenderer[] square = toWhite.GetComponentsInChildren<SpriteRenderer>();
@@ -85,10 +78,10 @@ public class GameManager : MonoBehaviour
     {
         if (currentGameMode == 2)
         {
-            SpawnDropBlock(blocks[0]);
-            Camera.main.transform.position = new Vector3(Camera.main.transform.position.x, Camera.main.transform.position.y + 0.46f, Camera.main.transform.position.z);
+            SpawnDropBlock(blocks[0], block);
         }
         else {
+            SetBlocksRText();
             //Checks to see if you made it into the goal with a stack. If so, turns all the blocks green and makes them immovable
             if (inGoal)
             {
@@ -112,19 +105,19 @@ public class GameManager : MonoBehaviour
             //if you've won changes the game state to the end game
             if (goalsGot == winCondition)
             {
-                wonLevel = true;
-                if (Application.isMobilePlatform)
-                {
-                    goalCount.text = "You Win! Tap anywhere to continue!";
-                }
-                else {
-                    goalCount.text = "You Win! Press any button to continue!";
-                }
+                Win();
             }
             //If you didnt win keeps on playing
             else
             {
-                SpawnDropBlock();
+                if (currentGameMode == 0 && (blocks.Count - currentBlock <= 0))
+                {
+                    GameOver();
+                }
+                else {
+                    Ding.Play();
+                    SpawnDropBlock();
+                }
             }
         }
     }
@@ -139,39 +132,76 @@ public class GameManager : MonoBehaviour
         dropBlockSpawn = Vector2.zero;
         currentBlock = 0;
         wonLevel = false;
-        gameOverScreen = null;
+        endGameScreen = null;
+        endlessHighScore = 0;
+        blocksRemaining = 0;
+        blocksRemainingText = null;
+        goalCount = null;
+        isActiveMovingBlock = false;
     }
 
-    public void CloseMMButtons(GameObject MasterButtons, GameObject buttons)
+    public bool CloseToSpawn(Vector3 objPos)
     {
-        Back.Play();
-        MasterButtons.SetActive(true);
-        buttons.SetActive(false);
-    }
-
-    public void GameOver()
-    {
-        Back.Play();
-        gameOverScreen.SetActive(true);
-        goalCount.text = "Try Again!";
-        if(currentGameMode == 2)
+        if (objPos.y >= dropBlockSpawn.y - 1)
         {
-            if(currentBlock > endlessHighScore)
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public void DeadBlock()
+    {
+        if (wonLevel)
+        {
+            return;
+        }
+        if (currentGameMode == 0)
+        {
+            SetBlocksRText();
+            if (blocks.Count - currentBlock <= 0)
             {
-                PlayerPrefs.SetInt("endlessHighScore", currentBlock);
-                endlessHighScore = currentBlock;
-                gameOverScreen.GetComponentInChildren<Text>().text = string.Format("Score: {0}    Best: <color=#56D963FF>{0}</color>", currentBlock);
+                GameOver();
             }
-            else
-            {
-                gameOverScreen.GetComponentInChildren<Text>().text = string.Format("Score: {0}    Best: {1}", currentBlock, endlessHighScore);
+            else {
+                Back.Play();
+                SpawnDropBlock();
             }
         }
         else
         {
-            gameOverScreen.GetComponentInChildren<Text>().text = string.Format("Goals: {0}", goalsGot);
+            GameOver();
         }
+    }
 
+    public void GameOver()
+    {
+        if (!endGameScreen.activeSelf)
+        {
+            goalCount.text = "Try Again!";
+            if (currentGameMode == 2)
+            {
+                if (currentBlock > endlessHighScore)
+                {
+                    PlayerPrefs.SetInt("endlessHighScore", currentBlock);
+                    endlessHighScore = currentBlock;
+                    endGameScreen.GetComponentInChildren<Text>().text = string.Format("Score: {0}    Best: <color=#56D963FF>{0}</color>", currentBlock);
+                }
+                else
+                {
+                    endGameScreen.GetComponentInChildren<Text>().text = string.Format("Score: {0}    Best: {1}", currentBlock, endlessHighScore);
+                }
+            }
+            else
+            {
+                endGameScreen.GetComponentInChildren<Text>().text = string.Format("Goals: {0}", goalsGot);
+            }
+            endGameScreen.transform.Find("Restart").gameObject.SetActive(true);
+            Back.Play();
+            endGameScreen.SetActive(true);
+        }
     }
 
     //Level switching system, if -1 is passed it reloads the level.
@@ -180,28 +210,118 @@ public class GameManager : MonoBehaviour
         if (i == -1)
         {
             Back.Play();
-            SceneManager.LoadScene(currentLevel);
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            ClearVariables();
+            Time.timeScale = 1;
+        }
+    }
+
+    public void LoadLevel(string i) {
+        if (i == "_MainMenu")
+        {
+            Back.Play();
         }
         else {
             Confirm.Play();
-            SceneManager.LoadScene(i);
-            currentLevel = i;
         }
+        SceneManager.LoadScene(i);
         ClearVariables();
         Time.timeScale = 1;
     }
 
-    public void OpenMMButtons(GameObject MasterButtons, GameObject buttons)
+    //Manages the opening and closing of menus on the opening screen
+    public void MainMenuUI(GameObject Open, GameObject Close, bool ConfirmSound)
     {
-        Confirm.Play();
-        MasterButtons.SetActive(false);
-        buttons.SetActive(true);
+        if (ConfirmSound) Confirm.Play();
+        else Back.Play();
+        Close.SetActive(false);
+        Open.SetActive(true);
+    }
+
+    public void SetBlocksRText()
+    {
+        if (currentGameMode == 0)
+        {
+            blocksRemaining--;
+            blocksRemainingText.text = string.Format("[ {0} ]", (blocksRemaining));
+        }
+    }
+
+    public void NextLevel()
+    {
+        if (SceneManager.GetActiveScene().name.StartsWith("H_Level"))
+        {
+            string c = SceneManager.GetActiveScene().name[SceneManager.GetActiveScene().name.Length - 1].ToString();
+            int i = int.Parse(c);
+            if (i == 0)
+            {
+                LoadLevel("_MainMenu");
+            }
+            else {
+                LoadLevel("H_Level" + (i + 1));
+            }
+        }
+
+        else if (SceneManager.GetActiveScene().name.StartsWith("R_Level"))
+        {
+            string c = SceneManager.GetActiveScene().name[SceneManager.GetActiveScene().name.Length - 1].ToString();
+            int i = int.Parse(c);
+            if (i == 7)
+            {
+                LoadLevel("_MainMenu");
+            }
+            else {
+                LoadLevel("R_Level" + (i + 1));
+            }
+        }
+    }
+
+    //Endless: Setting new cam position in a smart way
+    private void SetCameraPosition(GameObject oldBlock, GameObject newBlock)
+    {
+        float newY = (newBlock.transform.position.y + oldBlock.transform.position.y) / 2;
+        Camera.main.transform.position = new Vector3(Camera.main.transform.position.x, newY, Camera.main.transform.position.z);
+    }
+
+    public void SetNewestGold(GameObject that)
+    {
+        if (currentGameMode != 0)
+        {
+            DeadBlock();
+        }
+        else {
+            GameObject toGold = null;
+            foreach (GameObject block in blocks)
+            {
+                if (block.activeSelf && that.tag == block.tag && block != that && block.GetComponent<Rigidbody2D>().velocity.magnitude <= 0.02)
+                {
+                    toGold = block;
+                }
+            }
+            toGold.GetComponent<DropBlock>().currentlyGold = true;
+            that.GetComponent<DropBlock>().currentlyGold = false;
+            SpriteRenderer[] square = toGold.GetComponentsInChildren<SpriteRenderer>();
+            foreach (SpriteRenderer sprite in square)
+            {
+                sprite.color = gold;
+            }
+        }
+    }
+
+    public void StartLevelEndless(GameObject dropBlock, Vector2 spawn, Text b, GameObject gameOverPanel)
+    {
+        endGameScreen = gameOverPanel;
+        currentGameMode = 2;
+        dropBlockSpawn = spawn;
+        blocks.Add(dropBlock);
+        goalCount = b;
+        SpawnDropBlock(blocks[0]);
     }
 
     //Method for starting hard levels.
-    public void StartLevelHard(GameObject[] startBlocks, List<GameObject> regBlocks, Vector2 spawn, Text b, GameObject gameOverPanel)
+    public void StartLevelHard(GameObject[] startBlocks, List<GameObject> regBlocks, Vector2 spawn, Text b, GameObject gameOverPanel, float speedMod)
     {
-        gameOverScreen = gameOverPanel;
+        endGameScreen = gameOverPanel;
         currentGameMode = 1;
         dropBlockSpawn = spawn;
         foreach (GameObject block in startBlocks)
@@ -225,38 +345,82 @@ public class GameManager : MonoBehaviour
         goalCount.text = "0/" + winCondition;
     }
 
-    public void StartLevelEndless(GameObject dropBlock, Vector2 spawn, Text b, GameObject gameOverPanel)
+    public void StartLevelRegular(GameObject[] startBlocks, List<GameObject> regBlocks, Vector2 spawn, Text b, GameObject gameOverPanel, Text blocksLeft, float speedMod)
     {
-        gameOverScreen = gameOverPanel;
-        currentGameMode = 2;
+        blocksRemainingText = blocksLeft;
+        blocksRemaining = regBlocks.Count + 1;
+        endGameScreen = gameOverPanel;
+        currentGameMode = 0;
         dropBlockSpawn = spawn;
-        blocks.Add(dropBlock);
+        foreach (GameObject block in startBlocks)
+        {
+            blocks.Add(block);
+            winCondition++;
+        }
+        currentBlock = winCondition;
+        float currentSpeedMod = 0;
+        foreach (GameObject block in regBlocks)
+        {
+            float blockSpeed = block.GetComponent<MoveBlock>().speed;
+            blockSpeed = blockSpeed + currentSpeedMod;
+            currentSpeedMod = speedMod + currentSpeedMod;
+            block.GetComponent<MoveBlock>().speed = blockSpeed;
+            blocks.Add(block);
+            block.SetActive(false);
+        }
+        SpawnDropBlock();
         goalCount = b;
-        SpawnDropBlock(blocks[0]);
+        goalCount.text = "0/" + winCondition;
+        SetBlocksRText();
     }
 
-    //The system for "spawing" the blocks.
+    //The system for spawning the blocks in a pool.
     private void SpawnDropBlock()
     {
-        blocks[currentBlock].SetActive(true);
-        float dist = blocks[currentBlock].GetComponent<MoveBlock>().distance;
-        dist = Random.Range((dropBlockSpawn.x - dist), (dropBlockSpawn.x + dist));
-        Vector2 finalSpawn = new Vector2(dist, dropBlockSpawn.y);
-        blocks[currentBlock].GetComponent<MoveBlock>().SetPosition(dropBlockSpawn);
-        blocks[currentBlock].transform.position = finalSpawn;
-        currentBlock++;
+        if (!isActiveMovingBlock)
+        {
+            blocks[currentBlock].SetActive(true);
+            float dist = blocks[currentBlock].GetComponent<MoveBlock>().distance;
+            dist = Random.Range((dropBlockSpawn.x - dist), (dropBlockSpawn.x + dist));
+            Vector2 finalSpawn = new Vector2(dist, dropBlockSpawn.y);
+            blocks[currentBlock].GetComponent<MoveBlock>().SetPosition(dropBlockSpawn);
+            blocks[currentBlock].transform.position = finalSpawn;
+            currentBlock++;
+            isActiveMovingBlock = true;
+        }
     }
-
+    //System for spawning the blocks in Endless mode
     private void SpawnDropBlock(GameObject block)
     {
-        float dist = block.GetComponent<MoveBlock>().distance;
-        dist = Random.Range((dropBlockSpawn.x - dist), (dropBlockSpawn.x + dist));
-        Vector2 finalSpawn = new Vector2(dist, dropBlockSpawn.y + 0.46f);
-        dropBlockSpawn = new Vector2(dropBlockSpawn.x, finalSpawn.y);
-        GameObject newBlock = (GameObject)Instantiate(block, finalSpawn, Quaternion.identity);
-        newBlock.GetComponent<MoveBlock>().SetPosition(dropBlockSpawn);
-        currentBlock++;
-        goalCount.text = (currentBlock - 1).ToString();
+        if (!isActiveMovingBlock)
+        {
+            float dist = block.GetComponent<MoveBlock>().distance;
+            dist = Random.Range((dropBlockSpawn.x - dist), (dropBlockSpawn.x + dist));
+            Vector2 finalSpawn = new Vector2(dist, dropBlockSpawn.y);
+            dropBlockSpawn = new Vector2(dropBlockSpawn.x, finalSpawn.y);
+            GameObject newBlock = (GameObject)Instantiate(block, finalSpawn, Quaternion.identity);
+            newBlock.GetComponent<MoveBlock>().SetPosition(dropBlockSpawn);
+            currentBlock++;
+            goalCount.text = (currentBlock - 1).ToString();
+            isActiveMovingBlock = true;
+        }
+    }
+
+    private void SpawnDropBlock(GameObject block, GameObject oldBlock)
+    {
+        if (!isActiveMovingBlock)
+        {
+            float dist = block.GetComponent<MoveBlock>().distance;
+            dist = Random.Range((dropBlockSpawn.x - dist), (dropBlockSpawn.x + dist));
+            Vector2 finalSpawn = new Vector2(dist, oldBlock.transform.position.y + 4.5f);
+            dropBlockSpawn = new Vector2(dropBlockSpawn.x, finalSpawn.y);
+            GameObject newBlock = (GameObject)Instantiate(block, finalSpawn, Quaternion.identity);
+            newBlock.GetComponent<MoveBlock>().SetPosition(dropBlockSpawn);
+            SetCameraPosition(oldBlock, newBlock);
+            currentBlock++;
+            goalCount.text = (currentBlock - 1).ToString();
+            isActiveMovingBlock = true;
+        }
     }
 
     //The system for "spawning" the main menu decrotive blocks.
@@ -268,5 +432,13 @@ public class GameManager : MonoBehaviour
         blockNG.GetComponent<Rigidbody2D>().velocity = Vector2.zero;
         blockNG.transform.position = new Vector3(Random.Range(-2.5f, 2.5f), Random.Range(5.25f, 9.25f));
         blockNG.GetComponent<TimedDestroy>().waitTime = (blockNG.transform.position.y / 3f) + (1 - newScale);
+    }
+
+    public void Win()
+    {
+        endGameScreen.SetActive(true);
+        goalCount.text = "You Win!";
+        endGameScreen.GetComponentInChildren<Text>().text = string.Format("Goals: {0}", goalsGot);
+        endGameScreen.transform.Find("Next").gameObject.SetActive(true);
     }
 }

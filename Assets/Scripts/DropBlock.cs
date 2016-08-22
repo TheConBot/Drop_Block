@@ -1,16 +1,17 @@
 ﻿using UnityEngine;
 using UnityEngine.EventSystems;
+using System.Collections;
 
 public class DropBlock : MonoBehaviour
 {
     public enum TypeOfBlock { Drop_Block, Start_Block };
-    public TypeOfBlock      blockType;
-    private bool            getInputOnce;
-    private bool            spawnBlockOnce;
-    private bool            inGoal;
-    private bool            touchingBlock;
-    private GameObject      objectTouched;
-    public bool             currentlyGold;
+    public TypeOfBlock blockType;
+    private bool getInputOnce;
+    private bool spawnBlockOnce;
+    private bool inGoal;
+    private bool touchingBlock;
+    private GameObject objectTouched;
+    public bool currentlyGold;
 
     void Start()
     {
@@ -35,6 +36,7 @@ public class DropBlock : MonoBehaviour
                     gameObject.GetComponent<MoveBlock>().move = false;
                     gameObject.GetComponent<Rigidbody2D>().velocity = Vector2.zero;
                     getInputOnce = false;
+                    GameManager.Instance.isActiveMovingBlock = false;
                 }
             }
             else {
@@ -44,6 +46,7 @@ public class DropBlock : MonoBehaviour
                     gameObject.GetComponent<MoveBlock>().move = false;
                     gameObject.GetComponent<Rigidbody2D>().velocity = Vector2.zero;
                     getInputOnce = false;
+                    GameManager.Instance.isActiveMovingBlock = false;
                 }
             }
         }
@@ -61,15 +64,43 @@ public class DropBlock : MonoBehaviour
                 GameManager.Instance.CheckWin(inGoal, gameObject);
                 spawnBlockOnce = false;
             }
+            else if (gameObject.GetComponent<Rigidbody2D>().velocity.magnitude <= 0.01 && transform.position.y < gameObject.GetComponent<MoveBlock>().startPos.y && spawnBlockOnce && !touchingBlock && GameManager.Instance.CloseToSpawn(transform.position))
+            {
+                gameObject.SetActive(false);
+                GameManager.Instance.DeadBlock();
+                spawnBlockOnce = false;
+            }
+            else if (gameObject.GetComponent<Rigidbody2D>().velocity.magnitude <= 0.01 && transform.position.y < gameObject.GetComponent<MoveBlock>().startPos.y && spawnBlockOnce && !touchingBlock)
+            {
+                Debug.Log(string.Format("Velocity Magnitude is: {0}", gameObject.GetComponent<Rigidbody2D>().velocity.magnitude));
+                GameManager.Instance.DeadBlock();
+                spawnBlockOnce = false;
+            }
         }
+    }
+
+    IEnumerator TimeDisable()
+    {
+        yield return new WaitForSeconds(1);
+        gameObject.SetActive(false);
     }
 
     void OnTriggerEnter2D(Collider2D other)
     {
         if (blockType == TypeOfBlock.Drop_Block)
         {
-            if (other.name == "Goal_Block") inGoal = true;
-            else if (other.name == "Death_Block") GameManager.Instance.GameOver();
+            if (other.tag == "Goal_Block") inGoal = true;
+            else if (other.tag == "Death_Block")
+            {
+                if (currentlyGold)
+                {
+                    GameManager.Instance.SetNewestGold(gameObject);
+                }
+                else {
+                    GameManager.Instance.DeadBlock();
+                }
+                StartCoroutine(TimeDisable());
+            }
         }
     }
 
@@ -77,7 +108,7 @@ public class DropBlock : MonoBehaviour
     {
         if (blockType == TypeOfBlock.Drop_Block)
         {
-            if (other.name == "Goal_Block") inGoal = false;
+            if (other.tag == "Goal_Block") inGoal = false;
         }
     }
 

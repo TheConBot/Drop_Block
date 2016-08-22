@@ -25,11 +25,16 @@ public class Pause : MonoBehaviour {
 
     public void MainMenu()
     {
-        GameManager.Instance.LoadLevel(0);
+        GameManager.Instance.LoadLevel("_MainMenu");
     }
 
     public void Restart()
     {
         GameManager.Instance.LoadLevel(-1);
+    }
+
+    public void NextLevel()
+    {
+        GameManager.Instance.NextLevel();
     }
 }
