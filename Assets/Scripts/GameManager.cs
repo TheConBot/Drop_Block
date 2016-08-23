@@ -1,7 +1,9 @@
 ﻿using UnityEngine;
+using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using System.Linq;
 
 public class GameManager : MonoBehaviour
 {
@@ -52,7 +54,6 @@ public class GameManager : MonoBehaviour
             // Furthermore we make sure that we don't destroy between scenes
             DontDestroyOnLoad(gameObject);
             endlessHighScore = PlayerPrefs.GetInt("endlessHighScore");
-            Debug.Log(endlessHighScore);
         }
     }
 
@@ -232,12 +233,12 @@ public class GameManager : MonoBehaviour
     }
 
     //Manages the opening and closing of menus on the opening screen
-    public void MainMenuUI(GameObject Open, GameObject Close, bool ConfirmSound)
+    public void MainMenuUI(GameObject Enable, GameObject Disable, bool PlayConfirm)
     {
-        if (ConfirmSound) Confirm.Play();
+        if (PlayConfirm) Confirm.Play();
         else Back.Play();
-        Close.SetActive(false);
-        Open.SetActive(true);
+        Disable.SetActive(false);
+        Enable.SetActive(true);
     }
 
     public void SetBlocksRText()
@@ -253,27 +254,32 @@ public class GameManager : MonoBehaviour
     {
         if (SceneManager.GetActiveScene().name.StartsWith("H_Level"))
         {
-            string c = SceneManager.GetActiveScene().name[SceneManager.GetActiveScene().name.Length - 1].ToString();
+            string c = string.Join(string.Empty, Regex.Matches(SceneManager.GetActiveScene().name, @"\d+").OfType<Match>().Select(m => m.Value).ToArray());
             int i = int.Parse(c);
-            if (i == 0)
+            c = "H_Level" + (i + 1);
+            if (!SceneManager.GetSceneByName(c).IsValid())
             {
                 LoadLevel("_MainMenu");
             }
-            else {
-                LoadLevel("H_Level" + (i + 1));
+            else
+            {
+                LoadLevel(c);
             }
+            
         }
 
         else if (SceneManager.GetActiveScene().name.StartsWith("R_Level"))
         {
-            string c = SceneManager.GetActiveScene().name[SceneManager.GetActiveScene().name.Length - 1].ToString();
+            string c = string.Join(string.Empty, Regex.Matches(SceneManager.GetActiveScene().name, @"\d+").OfType<Match>().Select(m => m.Value).ToArray());
             int i = int.Parse(c);
-            if (i == 7)
+            c = "R_Level" + (i + 1);
+            if (!SceneManager.GetSceneByName(c).IsValid())
             {
                 LoadLevel("_MainMenu");
             }
-            else {
-                LoadLevel("R_Level" + (i + 1));
+            else
+            {
+                LoadLevel(c);
             }
         }
     }
@@ -430,10 +436,9 @@ public class GameManager : MonoBehaviour
     {
         float newScale = Random.Range(0.3f, 1.0f);
         blockNG.transform.localScale = new Vector3(newScale, newScale);
-        blockNG.GetComponent<Rigidbody2D>().gravityScale = newScale;
+        blockNG.GetComponent<Rigidbody2D>().gravityScale = newScale / 1.2f;
         blockNG.GetComponent<Rigidbody2D>().velocity = Vector2.zero;
-        blockNG.transform.position = new Vector3(Random.Range(-2.5f, 2.5f), Random.Range(5.25f, 9.25f));
-        blockNG.GetComponent<TimedDestroy>().waitTime = (blockNG.transform.position.y / 3f) + (1 - newScale);
+        blockNG.transform.position = new Vector3(Random.Range(-2.5f, 2.5f), Random.Range(5.25f, 15f));
     }
 
     public void Win()
