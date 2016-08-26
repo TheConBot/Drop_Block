@@ -4,6 +4,10 @@ using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using System.Linq;
+#if UNITY_ADS || UNITY_EDITOR
+using UnityEngine.Advertisements;
+using UnityEngine.Purchasing;
+#endif
 
 public class GameManager : MonoBehaviour
 {
@@ -12,6 +16,7 @@ public class GameManager : MonoBehaviour
     public Color gold;
     public Color green;
     public Color white;
+    public Color red;
     [Header("Variable Fields")]
     public float camSpeed = 3;
     public int levelsUnlocked;
@@ -19,6 +24,7 @@ public class GameManager : MonoBehaviour
     public AudioSource Confirm;
     public AudioSource Back;
     public AudioSource Ding;
+    public AudioSource BG;
 
     public static GameManager Instance { get; private set; }
 
@@ -28,6 +34,8 @@ public class GameManager : MonoBehaviour
     [HideInInspector]
     public List<string> completedCollums;
     //Vars
+    public int R_LevelsUnlocked = 0;
+    public int H_LevelsUnlocked = 0;
     private Vector2 dropBlockSpawn;
     private Text goalCount;
     private int winCondition;
@@ -39,9 +47,14 @@ public class GameManager : MonoBehaviour
     private int endlessHighScore;
     private int blocksRemaining;
     private Text blocksRemainingText;
+    private float adTime = -60;
+    public bool AdsDisabled = false;
+    private float endlessSpeedMod;
 
+    //Set GameManager to be a singleton, and check PlayerPrefs vars.
     void Awake()
     {
+        //PlayerPrefs.DeleteAll();
         if (Instance != null && Instance != this)
         {
             // Destroy if another Gamemanager already exists
@@ -53,7 +66,15 @@ public class GameManager : MonoBehaviour
             Instance = this;
             // Furthermore we make sure that we don't destroy between scenes
             DontDestroyOnLoad(gameObject);
+
             endlessHighScore = PlayerPrefs.GetInt("endlessHighScore");
+            int a = PlayerPrefs.GetInt("adsdisabled", 0);
+            R_LevelsUnlocked = PlayerPrefs.GetInt("R_LevelsUnlocked", 0);
+            H_LevelsUnlocked = PlayerPrefs.GetInt("H_LevelsUnlocked", 0);
+            if (a == 1)
+            {
+                AdsDisabled = true;
+            }
         }
     }
 
@@ -81,6 +102,8 @@ public class GameManager : MonoBehaviour
         if (currentGameMode == 2)
         {
             SpawnDropBlock(blocks[0], block);
+            block.GetComponent<Rigidbody2D>().isKinematic = true;
+            Ding.Play();
         }
         else {
             SetBlocksRText();
@@ -140,8 +163,10 @@ public class GameManager : MonoBehaviour
         blocksRemainingText = null;
         goalCount = null;
         isActiveMovingBlock = false;
+        endlessSpeedMod = 0;
     }
 
+    //Blocks too close to the block spawn are disabled to prevent bugs
     public bool CloseToSpawn(Vector3 objPos)
     {
         if (objPos.y >= dropBlockSpawn.y - 1)
@@ -154,6 +179,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    //If a block did not hit a red line but also didnt hit a gold block, it is considered dead and you either lose or a new block spawns
     public void DeadBlock()
     {
         if (wonLevel)
@@ -178,10 +204,19 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    //Pay .99 and disable advertisements permenantly
+    public void DisableAdsViaPurchase()
+    {
+        AdsDisabled = true;
+        PlayerPrefs.SetInt("adsdisabled", 1);
+    }
+
+    //If you lose a level
     public void GameOver()
     {
         if (!endGameScreen.activeSelf)
         {
+            ShowAd();
             goalCount.text = "Try Again!";
             if (currentGameMode == 2)
             {
@@ -241,6 +276,7 @@ public class GameManager : MonoBehaviour
         Enable.SetActive(true);
     }
 
+    //Set text for blocks remaining on Limit
     public void SetBlocksRText()
     {
         if (currentGameMode == 0)
@@ -250,6 +286,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    //Method for moving onto the next level directly after completeing one
     public void NextLevel()
     {
         if (SceneManager.GetActiveScene().name.StartsWith("H_Level"))
@@ -257,7 +294,7 @@ public class GameManager : MonoBehaviour
             string c = string.Join(string.Empty, Regex.Matches(SceneManager.GetActiveScene().name, @"\d+").OfType<Match>().Select(m => m.Value).ToArray());
             int i = int.Parse(c);
             c = "H_Level" + (i + 1);
-            if (!SceneManager.GetSceneByName(c).IsValid())
+            if (c == "H_Level11")
             {
                 LoadLevel("_MainMenu");
             }
@@ -273,7 +310,7 @@ public class GameManager : MonoBehaviour
             string c = string.Join(string.Empty, Regex.Matches(SceneManager.GetActiveScene().name, @"\d+").OfType<Match>().Select(m => m.Value).ToArray());
             int i = int.Parse(c);
             c = "R_Level" + (i + 1);
-            if (!SceneManager.GetSceneByName(c).IsValid())
+            if (c == "R_Level11")
             {
                 LoadLevel("_MainMenu");
             }
@@ -291,6 +328,7 @@ public class GameManager : MonoBehaviour
         Camera.main.transform.position = new Vector3(Camera.main.transform.position.x, newY, Camera.main.transform.position.z);
     }
 
+    //If a gold block falls, set the newest block that isnt moving to be gold
     public void SetNewestGold(GameObject that)
     {
         if (currentGameMode != 0)
@@ -316,17 +354,34 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void StartLevelEndless(GameObject dropBlock, Vector2 spawn, Text b, GameObject gameOverPanel)
+    //Show an ad, can only show an ad once ever minute
+    private void ShowAd()
+    {
+#if UNITY_ADS || UNITY_EDITOR
+        if (!AdsDisabled)
+        {
+            if (Advertisement.IsReady() && (Time.time - adTime) >= 60)
+            {
+                Advertisement.Show();
+                adTime = Time.time;
+            }
+        }
+#endif
+    }
+
+    //Method for starting Infinity mode
+    public void StartLevelEndless(GameObject dropBlock, Vector2 spawn, Text b, GameObject gameOverPanel, float speedMod)
     {
         endGameScreen = gameOverPanel;
         currentGameMode = 2;
         dropBlockSpawn = spawn;
         blocks.Add(dropBlock);
         goalCount = b;
+        endlessSpeedMod = speedMod;
         SpawnDropBlock(blocks[0]);
     }
 
-    //Method for starting hard levels.
+    //Method for starting Deadline levels.
     public void StartLevelHard(GameObject[] startBlocks, List<GameObject> regBlocks, Vector2 spawn, Text b, GameObject gameOverPanel, float speedMod)
     {
         endGameScreen = gameOverPanel;
@@ -353,6 +408,7 @@ public class GameManager : MonoBehaviour
         goalCount.text = "0/" + winCondition;
     }
 
+    //Method for starting Limit levels.
     public void StartLevelRegular(GameObject[] startBlocks, List<GameObject> regBlocks, Vector2 spawn, Text b, GameObject gameOverPanel, Text blocksLeft, float speedMod)
     {
         blocksRemainingText = blocksLeft;
@@ -382,6 +438,21 @@ public class GameManager : MonoBehaviour
         SetBlocksRText();
     }
 
+    //Method for enabling and disabling BG music.
+    public void Sound(GameObject soundButton)
+    {
+        if(BG.mute == true)
+        {
+            BG.mute = false;
+            soundButton.GetComponent<Image>().color = green;
+        }
+        else
+        {
+            BG.mute = true;
+            soundButton.GetComponent<Image>().color = red;
+        }
+    }
+
     //The system for spawning the blocks in a pool.
     private void SpawnDropBlock()
     {
@@ -397,6 +468,7 @@ public class GameManager : MonoBehaviour
             isActiveMovingBlock = true;
         }
     }
+
     //System for spawning the blocks in Endless mode
     private void SpawnDropBlock(GameObject block)
     {
@@ -424,6 +496,7 @@ public class GameManager : MonoBehaviour
             dropBlockSpawn = new Vector2(dropBlockSpawn.x, finalSpawn.y);
             GameObject newBlock = (GameObject)Instantiate(block, finalSpawn, Quaternion.identity);
             newBlock.GetComponent<MoveBlock>().SetPosition(dropBlockSpawn);
+            newBlock.GetComponent<MoveBlock>().speed = oldBlock.GetComponent<MoveBlock>().speed + endlessSpeedMod;
             SetCameraPosition(oldBlock, newBlock);
             currentBlock++;
             goalCount.text = (currentBlock - 1).ToString();
@@ -441,11 +514,34 @@ public class GameManager : MonoBehaviour
         blockNG.transform.position = new Vector3(Random.Range(-2.5f, 2.5f), Random.Range(5.25f, 15f));
     }
 
+    //If you win.
     public void Win()
     {
-        endGameScreen.SetActive(true);
+        ShowAd();
         goalCount.text = "You Win!";
         endGameScreen.GetComponentInChildren<Text>().text = string.Format("Goals: {0}", goalsGot);
         endGameScreen.transform.Find("Next").gameObject.SetActive(true);
+        endGameScreen.SetActive(true);
+        if (SceneManager.GetActiveScene().name.StartsWith("H_Level"))
+        {
+            string c = string.Join(string.Empty, Regex.Matches(SceneManager.GetActiveScene().name, @"\d+").OfType<Match>().Select(m => m.Value).ToArray());
+            int i = int.Parse(c);
+            if(i > H_LevelsUnlocked)
+            {
+                H_LevelsUnlocked++;
+                PlayerPrefs.SetInt("H_LevelsUnlocked", H_LevelsUnlocked);
+            }
+        }
+
+        else if (SceneManager.GetActiveScene().name.StartsWith("R_Level"))
+        {
+            string c = string.Join(string.Empty, Regex.Matches(SceneManager.GetActiveScene().name, @"\d+").OfType<Match>().Select(m => m.Value).ToArray());
+            int i = int.Parse(c);
+            if(i > R_LevelsUnlocked)
+            {
+                R_LevelsUnlocked++;
+                PlayerPrefs.SetInt("R_LevelsUnlocked", R_LevelsUnlocked);
+            }
+        }
     }
 }

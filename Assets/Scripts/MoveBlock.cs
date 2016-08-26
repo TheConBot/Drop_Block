@@ -66,6 +66,7 @@ public class MoveBlock : MonoBehaviour {
         {
             move = false;
             rigid.velocity = Vector2.zero;
+            rigid.constraints = RigidbodyConstraints2D.FreezeAll;
         }
     }
 }

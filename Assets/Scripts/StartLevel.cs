@@ -33,6 +33,6 @@ public class StartLevel : MonoBehaviour {
     void Start () {
         if (gameMode == GameMode.Regular) { GameManager.Instance.StartLevelRegular(startBlocks, regBlocks, dropBlockSpawn, UI_count, gameOverPanel, blockCount, speedMod); }
         if (gameMode == GameMode.Hard) { GameManager.Instance.StartLevelHard(startBlocks, regBlocks, dropBlockSpawn, UI_count, gameOverPanel, speedMod); }
-        if (gameMode == GameMode.Endless) { GameManager.Instance.StartLevelEndless(regBlocks[0], dropBlockSpawn, UI_count, gameOverPanel); }
+        if (gameMode == GameMode.Endless) { GameManager.Instance.StartLevelEndless(regBlocks[0], dropBlockSpawn, UI_count, gameOverPanel, speedMod); }
 	}
 }
