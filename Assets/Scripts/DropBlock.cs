@@ -35,13 +35,13 @@ public class DropBlock : MonoBehaviour
             else if (gameObject.GetComponent<Rigidbody2D>().velocity.magnitude <= 0.01 && transform.position.y < gameObject.GetComponent<MoveBlock>().startPos.y && !touchingBlock && GameManager.Instance.CloseToSpawn(transform.position))
             {
                 gameObject.SetActive(false);
-                GameManager.Instance.DeadBlock();
+                GameManager.Instance.DeadBlock(gameObject);
                 spawnBlockOnce = false;
             }
             else if (gameObject.GetComponent<Rigidbody2D>().velocity.magnitude <= 0.01 && transform.position.y < gameObject.GetComponent<MoveBlock>().startPos.y && !touchingBlock)
             {
                 Debug.Log(string.Format("Velocity Magnitude is: {0}", gameObject.GetComponent<Rigidbody2D>().velocity.magnitude));
-                GameManager.Instance.DeadBlock();
+                GameManager.Instance.DeadBlock(gameObject);
                 spawnBlockOnce = false;
             }
         }
@@ -65,7 +65,7 @@ public class DropBlock : MonoBehaviour
                     GameManager.Instance.SetNewestGold(gameObject);
                 }
                 else {
-                    GameManager.Instance.DeadBlock();
+                    GameManager.Instance.DeadBlock(gameObject);
                 }
                 StartCoroutine(TimeDisable());
             }

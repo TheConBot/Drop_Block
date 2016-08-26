@@ -180,7 +180,7 @@ public class GameManager : MonoBehaviour
     }
 
     //If a block did not hit a red line but also didnt hit a gold block, it is considered dead and you either lose or a new block spawns
-    public void DeadBlock()
+    public void DeadBlock(GameObject block)
     {
         if (wonLevel)
         {
@@ -188,13 +188,16 @@ public class GameManager : MonoBehaviour
         }
         if (currentGameMode == 0)
         {
-            SetBlocksRText();
+            if (block.tag == "Untagged")
+            {
+                SetBlocksRText();
+                Back.Play();
+            }
             if (blocks.Count - currentBlock <= 0)
             {
                 GameOver();
             }
             else {
-                Back.Play();
                 SpawnDropBlock();
             }
         }
@@ -333,7 +336,7 @@ public class GameManager : MonoBehaviour
     {
         if (currentGameMode != 0)
         {
-            DeadBlock();
+            DeadBlock(that);
         }
         else {
             GameObject toGold = null;
