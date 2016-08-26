@@ -34,8 +34,12 @@ public class GameManager : MonoBehaviour
     [HideInInspector]
     public List<string> completedCollums;
     //Vars
+    [HideInInspector]
     public int R_LevelsUnlocked = 0;
+    [HideInInspector]
     public int H_LevelsUnlocked = 0;
+    public Vector3 newCamPos;
+    public bool moveCam;
     private Vector2 dropBlockSpawn;
     private Text goalCount;
     private int winCondition;
@@ -54,7 +58,6 @@ public class GameManager : MonoBehaviour
     //Set GameManager to be a singleton, and check PlayerPrefs vars.
     void Awake()
     {
-        //PlayerPrefs.DeleteAll();
         if (Instance != null && Instance != this)
         {
             // Destroy if another Gamemanager already exists
@@ -164,6 +167,8 @@ public class GameManager : MonoBehaviour
         goalCount = null;
         isActiveMovingBlock = false;
         endlessSpeedMod = 0;
+        moveCam = false;
+        newCamPos = Vector3.zero;
     }
 
     //Blocks too close to the block spawn are disabled to prevent bugs
@@ -328,7 +333,8 @@ public class GameManager : MonoBehaviour
     private void SetCameraPosition(GameObject oldBlock, GameObject newBlock)
     {
         float newY = (newBlock.transform.position.y + oldBlock.transform.position.y) / 2;
-        Camera.main.transform.position = new Vector3(Camera.main.transform.position.x, newY, Camera.main.transform.position.z);
+        newCamPos = new Vector3(Camera.main.transform.position.x, newY, Camera.main.transform.position.z);
+        moveCam = true;
     }
 
     //If a gold block falls, set the newest block that isnt moving to be gold
