@@ -6,7 +6,6 @@ using UnityEngine.UI;
 using System.Linq;
 #if UNITY_ADS || UNITY_EDITOR
 using UnityEngine.Advertisements;
-using UnityEngine.Purchasing;
 #endif
 
 public class GameManager : MonoBehaviour
@@ -17,6 +16,7 @@ public class GameManager : MonoBehaviour
     public Color green;
     public Color white;
     public Color red;
+    public Color grey;
     [Header("Variable Fields")]
     public float camSpeed = 3;
     public int levelsUnlocked;
@@ -38,7 +38,9 @@ public class GameManager : MonoBehaviour
     public int R_LevelsUnlocked = 0;
     [HideInInspector]
     public int H_LevelsUnlocked = 0;
+    [HideInInspector]
     public Vector3 newCamPos;
+    [HideInInspector]
     public bool moveCam;
     private Vector2 dropBlockSpawn;
     private Text goalCount;
@@ -51,7 +53,8 @@ public class GameManager : MonoBehaviour
     private int endlessHighScore;
     private int blocksRemaining;
     private Text blocksRemainingText;
-    private float adTime = -60;
+    private float adTime = -120;
+    [HideInInspector]
     public bool AdsDisabled = false;
     private float endlessSpeedMod;
 
@@ -205,6 +208,12 @@ public class GameManager : MonoBehaviour
             else {
                 SpawnDropBlock();
             }
+            block.tag = "Dead";
+            SpriteRenderer[] square = block.GetComponentsInChildren<SpriteRenderer>();
+            foreach (SpriteRenderer sprite in square)
+            {
+                sprite.color = grey;
+            }
         }
         else
         {
@@ -302,7 +311,7 @@ public class GameManager : MonoBehaviour
             string c = string.Join(string.Empty, Regex.Matches(SceneManager.GetActiveScene().name, @"\d+").OfType<Match>().Select(m => m.Value).ToArray());
             int i = int.Parse(c);
             c = "H_Level" + (i + 1);
-            if (c == "H_Level11")
+            if (c == "H_Level16")
             {
                 LoadLevel("_MainMenu");
             }
@@ -318,7 +327,7 @@ public class GameManager : MonoBehaviour
             string c = string.Join(string.Empty, Regex.Matches(SceneManager.GetActiveScene().name, @"\d+").OfType<Match>().Select(m => m.Value).ToArray());
             int i = int.Parse(c);
             c = "R_Level" + (i + 1);
-            if (c == "R_Level11")
+            if (c == "R_Level16")
             {
                 LoadLevel("_MainMenu");
             }
@@ -369,7 +378,7 @@ public class GameManager : MonoBehaviour
 #if UNITY_ADS || UNITY_EDITOR
         if (!AdsDisabled)
         {
-            if (Advertisement.IsReady() && (Time.time - adTime) >= 60)
+            if (Advertisement.IsReady() && (Time.time - adTime) >= 120)
             {
                 Advertisement.Show();
                 adTime = Time.time;
@@ -467,14 +476,21 @@ public class GameManager : MonoBehaviour
     {
         if (!isActiveMovingBlock)
         {
-            blocks[currentBlock].SetActive(true);
-            float dist = blocks[currentBlock].GetComponent<MoveBlock>().distance;
-            dist = Random.Range((dropBlockSpawn.x - dist), (dropBlockSpawn.x + dist));
-            Vector2 finalSpawn = new Vector2(dist, dropBlockSpawn.y);
-            blocks[currentBlock].GetComponent<MoveBlock>().SetPosition(dropBlockSpawn);
-            blocks[currentBlock].transform.position = finalSpawn;
-            currentBlock++;
-            isActiveMovingBlock = true;
+            if (currentBlock >= blocks.Count)
+            {
+                GameOver();
+                Debug.LogWarning(string.Format("GameManager: Current Block: {0} ___ Block List Count: {1}\nRan out of blocks to pool from. Ending round...", currentBlock, blocks.Count));
+            }
+            else {
+                blocks[currentBlock].SetActive(true);
+                float dist = blocks[currentBlock].GetComponent<MoveBlock>().distance;
+                dist = Random.Range((dropBlockSpawn.x - dist), (dropBlockSpawn.x + dist));
+                Vector2 finalSpawn = new Vector2(dist, dropBlockSpawn.y);
+                blocks[currentBlock].GetComponent<MoveBlock>().SetPosition(dropBlockSpawn);
+                blocks[currentBlock].transform.position = finalSpawn;
+                currentBlock++;
+                isActiveMovingBlock = true;
+            }
         }
     }
 
@@ -495,6 +511,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    //System for spawning the blocks in Endless mode
     private void SpawnDropBlock(GameObject block, GameObject oldBlock)
     {
         if (!isActiveMovingBlock)

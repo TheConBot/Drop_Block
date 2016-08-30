@@ -40,7 +40,7 @@ public class DropBlock : MonoBehaviour
             }
             else if (gameObject.GetComponent<Rigidbody2D>().velocity.magnitude <= 0.01 && transform.position.y < gameObject.GetComponent<MoveBlock>().startPos.y && !touchingBlock)
             {
-                Debug.Log(string.Format("Velocity Magnitude is: {0}", gameObject.GetComponent<Rigidbody2D>().velocity.magnitude));
+                Debug.Log("bloop");
                 GameManager.Instance.DeadBlock(gameObject);
                 spawnBlockOnce = false;
             }

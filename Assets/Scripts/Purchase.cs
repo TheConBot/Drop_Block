@@ -13,6 +13,7 @@ public class Purchase : MonoBehaviour, IStoreListener
     private static IExtensionProvider m_StoreExtensionProvider; // The store-specific Purchasing subsystems.
 
     public static string kProductIDDisableAds = "disableads";
+    public static string kProductIDDisableAdsApple = "disableadsapple";
 
     void Start()
     {
@@ -36,7 +37,7 @@ public class Purchase : MonoBehaviour, IStoreListener
         // Create a builder, first passing in a suite of Unity provided stores.
         var builder = ConfigurationBuilder.Instance(StandardPurchasingModule.Instance());
 
-        builder.AddProduct(kProductIDDisableAds, ProductType.NonConsumable);
+        builder.AddProduct(kProductIDDisableAds, ProductType.NonConsumable, new IDs() { { kProductIDDisableAds, GooglePlay.Name }, { kProductIDDisableAdsApple, AppleAppStore.Name }, });
        
         UnityPurchasing.Initialize(this, builder);
     }
@@ -96,7 +97,7 @@ public class Purchase : MonoBehaviour, IStoreListener
     public void OnInitialized(IStoreController controller, IExtensionProvider extensions)
     {
         // Purchasing has succeeded initializing. Collect our Purchasing references.
-        //Debug.Log("OnInitialized: PASS");
+        Debug.Log("OnInitialized: PASS");
 
         // Overall Purchasing system, configured with products for this application.
         m_StoreController = controller;

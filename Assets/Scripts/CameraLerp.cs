@@ -13,7 +13,6 @@ public class CameraLerp : MonoBehaviour {
 
         if((transform.position.y + 0.05f) >= GameManager.Instance.newCamPos.y)
         {
-            Debug.Log(GameManager.Instance.newCamPos.y);
             GameManager.Instance.moveCam = false;
         }
 	}

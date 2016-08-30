@@ -7,7 +7,7 @@ public class MoveBlock : MonoBehaviour {
     public float speed;
 
     private int firstDirection;
-    private bool goingRight;
+    private bool goingRight = false;
     [HideInInspector]
     public bool move;
     private float timeStartedLerp;
@@ -16,6 +16,8 @@ public class MoveBlock : MonoBehaviour {
     private Vector2 rightPos;
     private Vector2 leftPos;
     private Rigidbody2D rigid;
+    public bool Override_StartLeft;
+    public bool Override_StartRight;
 
     void Start () {
         rigid = GetComponent<Rigidbody2D>();
@@ -30,9 +32,24 @@ public class MoveBlock : MonoBehaviour {
         startPos = pos;
         rightPos = new Vector2(startPos.x + distance, startPos.y);
         leftPos = new Vector2(startPos.x - distance, startPos.y);
-        firstDirection = Random.Range(0, 2);
-        if (firstDirection == 0) goingRight = true;
-        else goingRight = false;
+        if (Override_StartLeft)
+        {
+            goingRight = false;
+        }
+        else if (Override_StartRight){
+            goingRight = true;
+        }
+        else if(Override_StartLeft && Override_StartRight)
+        {
+            Debug.LogWarning("MoveBlock: Both Overrides are true, defaulting to left...");
+            goingRight = false;
+        }
+        else
+        {
+            firstDirection = Random.Range(0, 2);
+            if (firstDirection == 0) goingRight = true;
+            else goingRight = false;
+        }
         move = true;
     }
 
@@ -66,7 +83,6 @@ public class MoveBlock : MonoBehaviour {
         {
             move = false;
             rigid.velocity = Vector2.zero;
-            rigid.constraints = RigidbodyConstraints2D.FreezeAll;
         }
     }
 }
