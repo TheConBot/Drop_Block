@@ -362,6 +362,16 @@ public class GameManager : MonoBehaviour
                     toGold = block;
                 }
             }
+            if(toGold == null)
+            {
+                foreach (GameObject block in blocks)
+                {
+                    if(block.tag == that.tag)
+                    {
+                        toGold = block;
+                    }
+                }
+            }
             toGold.GetComponent<DropBlock>().currentlyGold = true;
             that.GetComponent<DropBlock>().currentlyGold = false;
             SpriteRenderer[] square = toGold.GetComponentsInChildren<SpriteRenderer>();
