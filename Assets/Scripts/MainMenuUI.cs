@@ -7,20 +7,27 @@ public class MainMenuUI : MonoBehaviour {
     public GameObject MainButtons;
     public GameObject LimitButtons;
     public GameObject DeadlineButtons;
-    public GameObject PurchasePanel;
+    public GameObject RemoveAds;
     public GameObject Settings;
     public GameObject SoundButton;
     public List<Button> R_Buttons;
     public List<Button> H_Buttons;
+    public GameObject RestorePurchases;
 
     void Start()
     {
         if (GameManager.Instance.AdsDisabled)
         {
-            PurchasePanel.GetComponent<CanvasGroup>().interactable = false;
+            RemoveAds.GetComponent<Button>().interactable = false;
         }
 
-        if(GameManager.Instance.BG.mute == true)
+        if (Application.platform != RuntimePlatform.IPhonePlayer ||
+            Application.platform != RuntimePlatform.OSXPlayer)
+        {
+            RestorePurchases.GetComponent<Button>().interactable = false;
+        }
+
+        if (GameManager.Instance.BG.mute == true)
         {
             SoundButton.GetComponent<Image>().color = GameManager.Instance.red;
         }
