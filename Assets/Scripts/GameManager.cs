@@ -55,7 +55,7 @@ public class GameManager : MonoBehaviour
     private Text blocksRemainingText;
     private float adTime = -120;
     [HideInInspector]
-    public bool AdsDisabled = false;
+    public bool AdsDisabled = true;
     private float endlessSpeedMod;
 
     //Set GameManager to be a singleton, and check PlayerPrefs vars.
@@ -382,7 +382,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    //Show an ad, can only show an ad once ever minute
+    //Show an ad, can only show an ad once every minute
     private void ShowAd()
     {
 #if UNITY_ADS || UNITY_EDITOR
