@@ -233,7 +233,7 @@ public class GameManager : MonoBehaviour
     {
         if (!endGameScreen.activeSelf)
         {
-            ShowAd();
+            //ShowAd();
             goalCount.text = "Try Again!";
             if (currentGameMode == 2)
             {
@@ -553,7 +553,7 @@ public class GameManager : MonoBehaviour
     //If you win.
     public void Win()
     {
-        ShowAd();
+        //ShowAd();
         goalCount.text = "You Win!";
         endGameScreen.GetComponentInChildren<Text>().text = string.Format("Goals: {0}", goalsGot);
         endGameScreen.transform.Find("Next").gameObject.SetActive(true);
